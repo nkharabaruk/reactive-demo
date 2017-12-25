@@ -25,13 +25,4 @@ public class TweetServiceImpl implements TweetService {
     public Flux<Tweet> getTweets() {
         return repository.findWithTailableCursorBy();
     }
-
-    @PostConstruct
-    private void asd() {
-        Flux
-                .concat(
-                        Flux.just(new Tweet("asd", new Date(), "asf")),
-                        getTweets())
-                .subscribe(tweet -> System.out.println("Tweet from DB " + tweet));
-    }
 }
