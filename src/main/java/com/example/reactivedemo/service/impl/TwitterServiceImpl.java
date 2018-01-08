@@ -12,6 +12,11 @@ import twitter4j.StatusAdapter;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
 public class TwitterServiceImpl implements TwitterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TwitterServiceImpl.class);
@@ -31,7 +36,10 @@ public class TwitterServiceImpl implements TwitterService {
                         .save(new Tweet(
                                 status.getText(),
                                 status.getCreatedAt(),
-                                status.getUser().getName()))
+                                status.getUser().getName(),
+                                Arrays.stream(status.getHashtagEntities())
+                                        .map(tag -> tag.getText())
+                                        .collect(Collectors.toList())))
                         .subscribe();
                 LOGGER.info("new Tweet saved to DB");
             }
@@ -41,7 +49,7 @@ public class TwitterServiceImpl implements TwitterService {
     @Override
     public void startStreaming() {
         twitterStream.addListener(listener);
-        twitterStream.filter("java", "scala", "kotlin", "groovy");
+        twitterStream.filter("#java", "#scala", "#kotlin", "#groovy");
         LOGGER.info("Start streaming Twitter");
     }
 

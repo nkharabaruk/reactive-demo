@@ -3,12 +3,14 @@ package com.example.reactivedemo.router;
 import com.example.reactivedemo.handler.TweetHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RouterFunctions.resources;
 
 @Component
 public class Router {
@@ -23,5 +25,11 @@ public class Router {
     @Bean
     RouterFunction<ServerResponse> tweetRouter() {
         return RouterFunctions.route(GET("/tweets"), handler::getAll);
+    }
+
+    @Bean
+    RouterFunction index() {
+
+        return resources("/static/**", new ClassPathResource("static/"));
     }
 }

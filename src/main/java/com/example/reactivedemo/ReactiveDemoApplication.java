@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import reactor.core.publisher.BaseSubscriber;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 @SpringBootApplication
@@ -48,6 +49,7 @@ public class ReactiveDemoApplication {
                                         firstTweet.put("text", "Aloha!");
                                         firstTweet.put("author", "system");
                                         firstTweet.put("date", new Date());
+                                        firstTweet.put("hashTags", new ArrayList<>());
                                         db.getCollection(COLLECTION_NAME)
                                                 .insertOne(firstTweet)
                                                 .subscribe(new BaseSubscriber<Success>() {
