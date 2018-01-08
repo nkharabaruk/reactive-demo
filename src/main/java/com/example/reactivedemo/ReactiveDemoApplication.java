@@ -1,14 +1,19 @@
 package com.example.reactivedemo;
 
+import com.example.reactivedemo.domain.Tweet;
+import com.mongodb.DB;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.Success;
+import org.bson.Document;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import reactor.core.publisher.BaseSubscriber;
+
+import java.util.Date;
 
 @SpringBootApplication
 @EnableReactiveMongoRepositories
@@ -39,7 +44,18 @@ public class ReactiveDemoApplication {
                                 .subscribe(new BaseSubscriber<Success>() {
                                     @Override
                                     protected void hookOnComplete() {
-                                        client.close();
+                                        Document firstTweet = new Document();
+                                        firstTweet.put("text", "Aloha!");
+                                        firstTweet.put("author", "system");
+                                        firstTweet.put("date", new Date());
+                                        db.getCollection(COLLECTION_NAME)
+                                                .insertOne(firstTweet)
+                                                .subscribe(new BaseSubscriber<Success>() {
+                                                    @Override
+                                                    protected void hookOnComplete() {
+                                                        client.close();
+                                                    }
+                                                });
                                     }
                                 });
                     }

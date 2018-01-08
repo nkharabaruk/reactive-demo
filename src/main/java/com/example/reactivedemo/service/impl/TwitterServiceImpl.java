@@ -3,61 +3,53 @@ package com.example.reactivedemo.service.impl;
 import com.example.reactivedemo.domain.Tweet;
 import com.example.reactivedemo.repository.TweetRepository;
 import com.example.reactivedemo.service.TwitterService;
-import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import twitter4j.*;
-
-import javax.annotation.PostConstruct;
+import twitter4j.Status;
+import twitter4j.StatusAdapter;
+import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
 
 @Service
 public class TwitterServiceImpl implements TwitterService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TwitterServiceImpl.class);
 
-    TweetRepository repository;
+    private final TweetRepository repository;
+    private final TwitterStream twitterStream;
+    private final StatusAdapter listener;
 
     @Autowired
     public TwitterServiceImpl(TweetRepository repository) {
         this.repository = repository;
-    }
-
-    @Override
-    @SneakyThrows
-    public Flux<Tweet> getHomeTimeLine() {
-        Twitter twitter = new TwitterFactory().getInstance();
-        return Flux.fromStream(
-                twitter.getHomeTimeline().stream()
-                        .map(this::toTweet));
-    }
-
-    private Tweet toTweet(Status status) {
-        return new Tweet(
-                status.getText(),
-                status.getCreatedAt(),
-                status.getUser().getName());
-    }
-
-    @Override
-    @SneakyThrows
-    public Flux<Status> getUserTimeLine(String screenName) {
-        return Flux.fromStream(
-                new TwitterFactory().getInstance()
-                        .getUserTimeline(screenName, new Paging(5))
-                        .stream());
-    }
-
-    @PostConstruct
-    private void asf() {
-        startStreaming();
+        twitterStream = new TwitterStreamFactory().getInstance();
+        listener = new StatusAdapter() {
+            @Override
+            public void onStatus(Status status) {
+                repository
+                        .save(new Tweet(
+                                status.getText(),
+                                status.getCreatedAt(),
+                                status.getUser().getName()))
+                        .subscribe();
+                LOGGER.info("new Tweet saved to DB");
+            }
+        };
     }
 
     @Override
     public void startStreaming() {
-        TwitterStream twitterStream = new TwitterStreamFactory().getInstance();
-        twitterStream.onStatus(status -> {
-            repository.save(toTweet(status)).subscribe();
-            System.out.println("new Tweet saved to DB");
-        });
-        twitterStream.filter("java");
+        twitterStream.addListener(listener);
+        twitterStream.filter("java", "scala", "kotlin", "groovy");
+        LOGGER.info("Start streaming Twitter");
+    }
+
+    @Override
+    public void stopStreaming() {
+        if (twitterStream != null) {
+            twitterStream.removeListener(listener);
+            LOGGER.info("Stop streaming Twitter");
+        }
     }
 }

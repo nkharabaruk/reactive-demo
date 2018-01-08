@@ -24,5 +24,4 @@ public class Router {
     RouterFunction<ServerResponse> tweetRouter() {
         return RouterFunctions.route(GET("/tweets"), handler::getAll);
     }
-
 }
