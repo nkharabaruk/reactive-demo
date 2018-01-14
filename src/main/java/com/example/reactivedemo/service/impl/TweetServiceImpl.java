@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 @Service
 public class TweetServiceImpl implements TweetService {
 
@@ -21,5 +23,10 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public Flux<Tweet> getTweets() {
         return repository.findWithTailableCursorBy();
+    }
+
+    @Override
+    public Flux<Tweet> getTweetsWithTags(List<String> tags) {
+        return repository.findByHashTagsIn(tags);
     }
 }

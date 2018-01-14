@@ -29,7 +29,6 @@ public class Router {
 
     @Bean
     RouterFunction index() {
-
         return resources("/static/**", new ClassPathResource("static/"));
     }
 }

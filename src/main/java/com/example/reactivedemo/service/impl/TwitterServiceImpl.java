@@ -12,22 +12,18 @@ import twitter4j.StatusAdapter;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class TwitterServiceImpl implements TwitterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TwitterServiceImpl.class);
 
-    private final TweetRepository repository;
     private final TwitterStream twitterStream;
     private final StatusAdapter listener;
 
     @Autowired
     public TwitterServiceImpl(TweetRepository repository) {
-        this.repository = repository;
         twitterStream = new TwitterStreamFactory().getInstance();
         listener = new StatusAdapter() {
             @Override
@@ -38,7 +34,7 @@ public class TwitterServiceImpl implements TwitterService {
                                 status.getCreatedAt(),
                                 status.getUser().getName(),
                                 Arrays.stream(status.getHashtagEntities())
-                                        .map(tag -> tag.getText())
+                                        .map(tag -> tag.getText().toLowerCase())
                                         .collect(Collectors.toList())))
                         .subscribe();
                 LOGGER.info("new Tweet saved to DB");

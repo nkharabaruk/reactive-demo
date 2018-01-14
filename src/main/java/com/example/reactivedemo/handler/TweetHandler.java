@@ -16,10 +16,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class TweetHandler {
-    public static final Logger LOGGER = LoggerFactory.getLogger(TweetHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TweetHandler.class);
 
     private final TweetService tweetService;
     private final TwitterService twitterService;
@@ -34,21 +35,35 @@ public class TweetHandler {
 
     public Mono<ServerResponse> getAll(ServerRequest request) {
         long timestamp = System.currentTimeMillis();
-        Flux<Tweet> tweets = tweetService.getTweets()
-                .doOnSubscribe(subscription -> {
-                    if (CollectionUtils.isEmpty(subscriptions)) {
-                        twitterService.startStreaming();
-                    }
-                    subscriptions.put(timestamp, subscription);
-                    LOGGER.info("new client subscribed at " + new Date(timestamp));
-                })
-                .doOnCancel(() -> {
-                    subscriptions.remove(timestamp);
-                    LOGGER.info("new client unsubscribed at " + new Date(timestamp));
-                    if (CollectionUtils.isEmpty(subscriptions)) {
-                        twitterService.stopStreaming();
-                    }
-                });
+        List<String> tags = request.queryParam("tags")
+                .map(str -> Arrays.stream(str.split(","))
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
+        Flux<Tweet> tweets;
+        if (tags.isEmpty()) {
+            tweets = tweetService.getTweets();
+        } else {
+            tweets = tweetService.getTweetsWithTags(tags);
+        }
+        tweets = tweets.doOnSubscribe(subscription -> {
+            if (CollectionUtils.isEmpty(subscriptions)) {
+                twitterService.startStreaming();
+            }
+            subscriptions.put(timestamp, subscription);
+            LOGGER.info("new client subscribed at " + new Date(timestamp));
+        }).doOnCancel(() -> {
+            subscriptions.remove(timestamp);
+            LOGGER.info("new client unsubscribed at " + new Date(timestamp));
+            if (CollectionUtils.isEmpty(subscriptions)) {
+                twitterService.stopStreaming();
+            }
+        }).doOnComplete(() -> {
+            subscriptions.remove(timestamp);
+            LOGGER.info("new client finished at " + new Date(timestamp));
+            if (CollectionUtils.isEmpty(subscriptions)) {
+                twitterService.stopStreaming();
+            }
+        });
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_STREAM_JSON)
                 .body(tweets, Tweet.class);

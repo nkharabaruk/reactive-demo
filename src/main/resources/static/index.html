@@ -1,32 +1,20 @@
+<html>
+
+<head>
+
+</head>
+
+<body>
 <h1>hello world!</h1>
 
-<div id="tweet-list">
+<input id="java" type="button" value="Java" onclick="sendRequest('java');"/>
+<input id="groovy" type="button" value="Groovy" onclick="sendRequest('groovy');"/>
+<input id="kotlin" type="button" value="Kotlin" onclick="sendRequest('kotlin');"/>
+<input id="scala" type="button" value="Scala" onclick="sendRequest('scala');"/>
 
-</div>
+<div id="tweet-list"></div>
 
-<script>
-    getTweets();
+<script src="/static/js/tweets.js"></script>
+</body>
 
-    function getTweets() {
-        var xhr = new XMLHttpRequest();
-        var size = 0;
-        var tweetList = document.getElementById("tweet-list");
-        xhr.open("GET", "http://localhost:8080/tweets", true);
-        xhr.onprogress = function () {
-            var arr = xhr.responseText.split("\n");
-            var newTweets = arr.slice(size, arr.length - 1);
-            for (var i = 0; i < newTweets.length; i++) {
-                var tweet = JSON.parse(newTweets[i]);
-                tweetList.innerHTML = tweetList.innerHTML.concat("\n" +
-                    '<div>' +
-                    '<h2>' + tweet.author + '</h2>' +
-                    '<h3>' + tweet.text + '</h3>' +
-                    '<h4>' + tweet.date + '</h4>' +
-                    '</div>');
-            }
-            console.log("PROGRESS:", newTweets);
-            size += newTweets.length;
-        };
-        xhr.send();
-    }
-</script>
+</html>
